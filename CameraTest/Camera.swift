@@ -9,10 +9,37 @@
 import Foundation
 import AVFoundation
 import Photos
+import SwiftUI
 
-protocol CameraProtocol {
-    func connectViewfinder(layer: AVCaptureVideoPreviewLayer) -> CameraProtocol
-    func takePhoto() -> Void
+struct Camera {
+    
+    fileprivate let device: AVCaptureDevice
+    fileprivate let photoOutput: AVCapturePhotoOutput
+    fileprivate let delegate: AVCapturePhotoCaptureDelegate
+    
+    let viewfinder: CameraViewfinder
+    
+    func takePhoto() {
+        photoOutput.capturePhoto(with: .init(), delegate: delegate)
+    }
+    
+    func focus(value: Float) {
+        focusTo(value: value)
+    }
+    
+    func focusTo(value : Float) {
+        
+        do {
+            try device.lockForConfiguration()
+            device.setFocusModeLocked(lensPosition: value, completionHandler: nil)
+            device.unlockForConfiguration()
+        } catch {}
+        
+        
+    }
+    
+    
+    
 }
 
 struct CameraBuilder {
@@ -29,13 +56,19 @@ struct CameraBuilder {
                 captureSession.addOutput(photoOutput)
             } catch {
                 print("error in: captureSession.addInput(AVCaptureDeviceInput(device: device))")
+                return nil
             }
             
             captureSession.commitConfiguration()
             
             let settings = AVCapturePhotoSettings()
             
-            return Camera(device: device, session: captureSession, photoOutput: photoOutput, delegate: PhotoCaptureProcessor(with: settings))
+            return Camera(
+                device: device,
+                photoOutput: photoOutput,
+                delegate: PhotoCaptureProcessor(with: settings),
+                viewfinder: CameraViewfinder(session: captureSession)
+            )
             
         } else {
             return nil
@@ -43,35 +76,75 @@ struct CameraBuilder {
     }
 }
 
-struct Camera : CameraProtocol {
-    internal let device: AVCaptureDevice
-    internal let session: AVCaptureSession
-    internal let photoOutput: AVCapturePhotoOutput
-    internal let delegate: AVCapturePhotoCaptureDelegate
+
+
+
+class PreviewView: UIView {
+    private var captureSession: AVCaptureSession
     
-    func connectViewfinder(layer: AVCaptureVideoPreviewLayer) -> CameraProtocol {
-        layer.session = session
-        return self
+    init(session: AVCaptureSession) {
+        self.captureSession = session
+        super.init(frame: .zero)
     }
     
-    func takePhoto() {
-        photoOutput.capturePhoto(with: .init(), delegate: delegate)
+    override class var layerClass: AnyClass {
+        AVCaptureVideoPreviewLayer.self
     }
     
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    var videoPreviewLayer: AVCaptureVideoPreviewLayer {
+        return layer as! AVCaptureVideoPreviewLayer
+    }
+    
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        
+        if self.superview != nil {
+            self.videoPreviewLayer.session = self.captureSession
+            self.videoPreviewLayer.videoGravity = .resizeAspect
+            self.captureSession.startRunning()
+        } else {
+            self.captureSession.stopRunning()
+        }
+    }
 }
+
+
+struct CameraViewfinder: UIViewRepresentable {
+    
+    internal var session: AVCaptureSession
+    
+    func makeUIView(context: UIViewRepresentableContext<CameraViewfinder>) -> PreviewView {
+        PreviewView(session: session)
+    }
+    
+    func updateUIView(_ uiView: PreviewView, context: UIViewRepresentableContext<CameraViewfinder>) {
+    }
+    
+    typealias UIViewType = PreviewView
+}
+
+
+
+
+
+
 
 class PhotoCaptureProcessor: NSObject {
     private(set) var requestedPhotoSettings: AVCapturePhotoSettings
     
-//    private let willCapturePhotoAnimation: () -> Void
+    //    private let willCapturePhotoAnimation: () -> Void
     
-//    private let livePhotoCaptureHandler: (Bool) -> Void
+    //    private let livePhotoCaptureHandler: (Bool) -> Void
     
     lazy var context = CIContext()
     
-//    private let completionHandler: (PhotoCaptureProcessor) -> Void
+    //    private let completionHandler: (PhotoCaptureProcessor) -> Void
     
-//    private let photoProcessingHandler: (Bool) -> Void
+    //    private let photoProcessingHandler: (Bool) -> Void
     
     private var photoData: Data?
     
@@ -84,16 +157,16 @@ class PhotoCaptureProcessor: NSObject {
     private var maxPhotoProcessingTime: CMTime?
     
     init(with requestedPhotoSettings: AVCapturePhotoSettings
-//         willCapturePhotoAnimation: @escaping () -> Void,
-//         livePhotoCaptureHandler: @escaping (Bool) -> Void,
-//         completionHandler: @escaping (PhotoCaptureProcessor) -> Void
-//         photoProcessingHandler: @escaping (Bool) -> Void
+        //         willCapturePhotoAnimation: @escaping () -> Void,
+        //         livePhotoCaptureHandler: @escaping (Bool) -> Void,
+        //         completionHandler: @escaping (PhotoCaptureProcessor) -> Void
+        //         photoProcessingHandler: @escaping (Bool) -> Void
     ) {
         self.requestedPhotoSettings = requestedPhotoSettings
-//        self.willCapturePhotoAnimation = willCapturePhotoAnimation
-//        self.livePhotoCaptureHandler = livePhotoCaptureHandler
-//        self.completionHandler = completionHandler
-//        self.photoProcessingHandler = photoProcessingHandler
+        //        self.willCapturePhotoAnimation = willCapturePhotoAnimation
+        //        self.livePhotoCaptureHandler = livePhotoCaptureHandler
+        //        self.completionHandler = completionHandler
+        //        self.photoProcessingHandler = photoProcessingHandler
     }
     
     private func didFinish() {
@@ -107,7 +180,7 @@ class PhotoCaptureProcessor: NSObject {
             }
         }
         
-//        completionHandler(self)
+        //        completionHandler(self)
     }
     
 }
@@ -120,14 +193,14 @@ extension PhotoCaptureProcessor: AVCapturePhotoCaptureDelegate {
     /// - Tag: WillBeginCapture
     func photoOutput(_ output: AVCapturePhotoOutput, willBeginCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings) {
         if resolvedSettings.livePhotoMovieDimensions.width > 0 && resolvedSettings.livePhotoMovieDimensions.height > 0 {
-//            livePhotoCaptureHandler(true)
+            //            livePhotoCaptureHandler(true)
         }
         maxPhotoProcessingTime = resolvedSettings.photoProcessingTimeRange.start + resolvedSettings.photoProcessingTimeRange.duration
     }
     
     /// - Tag: WillCapturePhoto
     func photoOutput(_ output: AVCapturePhotoOutput, willCapturePhotoFor resolvedSettings: AVCaptureResolvedPhotoSettings) {
-//        willCapturePhotoAnimation()
+        //        willCapturePhotoAnimation()
         
         guard let maxPhotoProcessingTime = maxPhotoProcessingTime else {
             return
@@ -136,7 +209,7 @@ extension PhotoCaptureProcessor: AVCapturePhotoCaptureDelegate {
         // Show a spinner if processing time exceeds one second.
         let oneSecond = CMTime(seconds: 1, preferredTimescale: 1)
         if maxPhotoProcessingTime > oneSecond {
-//            photoProcessingHandler(true)
+            //            photoProcessingHandler(true)
         }
     }
     
@@ -186,7 +259,7 @@ extension PhotoCaptureProcessor: AVCapturePhotoCaptureDelegate {
     
     /// - Tag: DidFinishProcessingPhoto
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-//        photoProcessingHandler(false)
+        //        photoProcessingHandler(false)
         
         if let error = error {
             print("Error capturing photo: \(error)")
@@ -220,7 +293,7 @@ extension PhotoCaptureProcessor: AVCapturePhotoCaptureDelegate {
     
     /// - Tag: DidFinishRecordingLive
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishRecordingLivePhotoMovieForEventualFileAt outputFileURL: URL, resolvedSettings: AVCaptureResolvedPhotoSettings) {
-//        livePhotoCaptureHandler(false)
+        //        livePhotoCaptureHandler(false)
     }
     
     /// - Tag: DidFinishProcessingLive
