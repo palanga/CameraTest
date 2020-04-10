@@ -13,6 +13,7 @@
 		F3C7E3242440596800EF29B6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F3C7E3232440596800EF29B6 /* Assets.xcassets */; };
 		F3C7E3272440596800EF29B6 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F3C7E3262440596800EF29B6 /* Preview Assets.xcassets */; };
 		F3C7E32A2440596800EF29B6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F3C7E3282440596800EF29B6 /* LaunchScreen.storyboard */; };
+		F3C7E33224405BC800EF29B6 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3C7E33124405BC800EF29B6 /* Camera.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		F3C7E3262440596800EF29B6 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F3C7E3292440596800EF29B6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F3C7E32B2440596800EF29B6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F3C7E33124405BC800EF29B6 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +65,7 @@
 				F3C7E3282440596800EF29B6 /* LaunchScreen.storyboard */,
 				F3C7E32B2440596800EF29B6 /* Info.plist */,
 				F3C7E3252440596800EF29B6 /* Preview Content */,
+				F3C7E33124405BC800EF29B6 /* Camera.swift */,
 			);
 			path = CameraTest;
 			sourceTree = "<group>";
@@ -146,6 +149,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3C7E33224405BC800EF29B6 /* Camera.swift in Sources */,
 				F3C7E31E2440596600EF29B6 /* AppDelegate.swift in Sources */,
 				F3C7E3202440596600EF29B6 /* SceneDelegate.swift in Sources */,
 				F3C7E3222440596600EF29B6 /* ContentView.swift in Sources */,
