@@ -18,8 +18,12 @@ class Camera {
     fileprivate let delegate: AVCapturePhotoCaptureDelegate
     
     private var _focus: Float = 0.5
+    private var _shutterSpeed: Double = 1 / 60
+    private var _iso: Float = 400
     
     let viewfinder: CameraViewfinder
+    
+    let shutterSpeedRange: ClosedRange<Double>
     
     init(
         device: AVCaptureDevice,
@@ -31,8 +35,15 @@ class Camera {
         self.photoOutput = photoOutput
         self.delegate = delegate
         self.viewfinder = viewfinder
+        
+        self.shutterSpeedRange = device.activeFormat.minExposureDuration.seconds...device.activeFormat.maxExposureDuration.seconds
+        
     }
-
+    
+    func takePhoto() {
+        photoOutput.capturePhoto(with: .init(), delegate: delegate)
+    }
+    
     func focusBinding() -> Binding<Float> {
         return Binding(get: { self._focus }, set: {(newValue) in
             self._focus = newValue
@@ -40,14 +51,44 @@ class Camera {
         })
     }
     
-    func takePhoto() {
-        photoOutput.capturePhoto(with: .init(), delegate: delegate)
+    func shutterSpeedBinding() -> Binding<Double> {
+        return Binding(get: { self._shutterSpeed }, set: {(newValue) in
+            self._shutterSpeed = newValue
+            self.handleShutterSpeed(value: newValue)
+        })
     }
     
     private func handleFocus(value: Float) {
         do {
             try device.lockForConfiguration()
             device.setFocusModeLocked(lensPosition: value, completionHandler: nil)
+            device.unlockForConfiguration()
+        } catch {}
+    }
+    
+    private func handleShutterSpeed(value: Double) {
+        do {
+            try device.lockForConfiguration()
+            let min = self.device.activeFormat.minExposureDuration
+            let max = self.device.activeFormat.maxExposureDuration
+
+            let xMax = -(log(min.seconds) / log(2))
+            
+            let aux = CMTime.init(
+                seconds: 1 / pow(2, xMax * value),
+                preferredTimescale: 1000000
+            )
+            
+            let sanitizedShutterSpeed: CMTime
+            if aux < min {
+                sanitizedShutterSpeed = min
+            } else if max < aux {
+                sanitizedShutterSpeed = max
+            } else {
+                sanitizedShutterSpeed = aux
+            }
+            
+            device.setExposureModeCustom(duration: sanitizedShutterSpeed, iso: self._iso, completionHandler: nil)
             device.unlockForConfiguration()
         } catch {}
     }

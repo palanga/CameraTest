@@ -24,6 +24,7 @@ struct ContentView: View {
                 .onTapGesture { self.camera.takePhoto() }
             
             Slider(value: camera.focusBinding())
+            Slider(value: camera.shutterSpeedBinding())
             
         }
     }
