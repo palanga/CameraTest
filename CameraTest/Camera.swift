@@ -154,6 +154,8 @@ struct CameraBuilder {
                 return nil
             }
             
+            captureSession.sessionPreset = AVCaptureSession.Preset.photo
+            
             captureSession.commitConfiguration()
             
             let photoCaptureSettings = AVCapturePhotoSettings()
