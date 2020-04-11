@@ -25,6 +25,7 @@ struct ContentView: View {
             
             Slider(value: camera.focusBinding())
             Slider(value: camera.shutterSpeedBinding())
+            Slider(value: camera.isoBinding())
             
         }
     }
