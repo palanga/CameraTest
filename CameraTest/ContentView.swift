@@ -23,37 +23,46 @@ struct ContentView: View {
                 .viewfinder
                 .onTapGesture { self.camera.takePhoto() }
             
-            FocusSlider(onChange: self.camera.focus).padding(32)
-                
-            //            Slider(
-            //                value: Binding(
-            //                    get: {
-            //                        self.focus
-            //                },
-            //                    set: {(newValue) in
-            //                        self.focus = newValue
-            //                        self.camera.focus(value: newValue)
-            //                }),
-            //                in: 0...1
-            //            ).padding(32)
+            Selector(onChange: self.camera.focus).padding(24)
+            
         }
     }
+
 }
 
-struct FocusSlider: View {
+class Settings: ObservableObject {
+    @Published var focus: Float = 0
+}
+
+struct AnotherSlider: View {
     
-    @State private var value: Float = 0.5
+    @Binding var value: Float
     
+    var body: some View {
+        
+//        $value.on
+        
+        Slider(value: $value)
+    }
+    
+}
+
+struct Selector: View {
+    
+//    @State private var value: Float = 0.5
+    
+    @EnvironmentObject var settings: Settings
+
     let onChange: (Float) -> Void
     
     var body: some View {
         Slider(
             value: Binding(
                 get: {
-                    self.value
+                    self.settings.focus
             },
                 set: {(newValue) in
-                    self.value = newValue
+                    self.settings.focus = newValue
                     self.onChange(newValue)
             }),
             in: 0...1
