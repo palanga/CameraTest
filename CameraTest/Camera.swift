@@ -11,36 +11,49 @@ import AVFoundation
 import Photos
 import SwiftUI
 
-struct Camera {
+class Camera {
     
     fileprivate let device: AVCaptureDevice
     fileprivate let photoOutput: AVCapturePhotoOutput
     fileprivate let delegate: AVCapturePhotoCaptureDelegate
     
+    private var _focus: Float = 0.5
+    
     let viewfinder: CameraViewfinder
+    
+    init(
+        device: AVCaptureDevice,
+        photoOutput: AVCapturePhotoOutput,
+        delegate: AVCapturePhotoCaptureDelegate,
+        viewfinder: CameraViewfinder
+    ) {
+        self.device = device
+        self.photoOutput = photoOutput
+        self.delegate = delegate
+        self.viewfinder = viewfinder
+    }
+
+    func focusBinding() -> Binding<Float> {
+        return Binding(get: { self._focus }, set: {(newValue) in
+            self._focus = newValue
+            self.handleFocus(value: newValue)
+        })
+    }
     
     func takePhoto() {
         photoOutput.capturePhoto(with: .init(), delegate: delegate)
     }
     
-    func focus(value: Float) {
-        focusTo(value: value)
-    }
-    
-    func focusTo(value : Float) {
-        
+    private func handleFocus(value: Float) {
         do {
             try device.lockForConfiguration()
             device.setFocusModeLocked(lensPosition: value, completionHandler: nil)
             device.unlockForConfiguration()
         } catch {}
-        
-        
     }
     
-    
-    
 }
+
 
 struct CameraBuilder {
     func make() -> Camera? {
@@ -61,12 +74,12 @@ struct CameraBuilder {
             
             captureSession.commitConfiguration()
             
-            let settings = AVCapturePhotoSettings()
+            let photoCaptureSettings = AVCapturePhotoSettings()
             
             return Camera(
                 device: device,
                 photoOutput: photoOutput,
-                delegate: PhotoCaptureProcessor(with: settings),
+                delegate: PhotoCaptureProcessor(with: photoCaptureSettings),
                 viewfinder: CameraViewfinder(session: captureSession)
             )
             

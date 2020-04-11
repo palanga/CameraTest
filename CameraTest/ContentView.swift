@@ -23,53 +23,12 @@ struct ContentView: View {
                 .viewfinder
                 .onTapGesture { self.camera.takePhoto() }
             
-            Selector(onChange: self.camera.focus).padding(24)
+            Slider(value: camera.focusBinding())
             
         }
     }
 
 }
-
-class Settings: ObservableObject {
-    @Published var focus: Float = 0
-}
-
-struct AnotherSlider: View {
-    
-    @Binding var value: Float
-    
-    var body: some View {
-        
-//        $value.on
-        
-        Slider(value: $value)
-    }
-    
-}
-
-struct Selector: View {
-    
-//    @State private var value: Float = 0.5
-    
-    @EnvironmentObject var settings: Settings
-
-    let onChange: (Float) -> Void
-    
-    var body: some View {
-        Slider(
-            value: Binding(
-                get: {
-                    self.settings.focus
-            },
-                set: {(newValue) in
-                    self.settings.focus = newValue
-                    self.onChange(newValue)
-            }),
-            in: 0...1
-        )
-    }
-}
-
 
 //struct ContentView_Previews: PreviewProvider {
 //    static var previews: some View {
